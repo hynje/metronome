@@ -3,15 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 class Metronome extends StatefulWidget {
-  final double bpm;
-  final int beat, note;
-
-  const Metronome({
-    super.key,
-    required this.bpm, //max265
-    required this.beat,
-    required this.note,
-  });
+  const Metronome({super.key});
 
   @override
   State<Metronome> createState() => _MetronomeState();
@@ -21,6 +13,8 @@ class _MetronomeState extends State<Metronome> {
   late Timer timer;
   bool isPlaying = false;
   int presentNote = 0;
+  double bpm = 120;
+  int beat = 4, note = 4;
 
   Timer makePeriodicTimer(
     Duration duration,
@@ -39,7 +33,7 @@ class _MetronomeState extends State<Metronome> {
     await player.play(AssetSource(
         'single-beep_C_major.wav')); // will immediately start playing
     setState(() {
-      if (presentNote < widget.beat) {
+      if (presentNote < beat) {
         presentNote++;
       } else {
         presentNote = 1;
@@ -52,8 +46,7 @@ class _MetronomeState extends State<Metronome> {
       isPlaying = true;
     });
     timer = makePeriodicTimer(
-        Duration(milliseconds: (60000 / widget.bpm.round()).round()),
-        onTickMetronome,
+        Duration(milliseconds: (60000 / bpm.round()).round()), onTickMetronome,
         fireNow: true);
   }
 
@@ -66,29 +59,107 @@ class _MetronomeState extends State<Metronome> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            for (int i = 1; i <= widget.beat; ++i)
-              IconButton(
-                onPressed: () {},
-                icon: (presentNote == i)
-                    ? const Icon(Icons.circle_outlined)
-                    : const Icon(Icons.circle),
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              for (int i = 1; i <= beat; ++i)
+                IconButton(
+                  onPressed: () {},
+                  icon: (presentNote == i)
+                      ? const Icon(Icons.circle_outlined)
+                      : const Icon(Icons.circle),
+                ),
+            ],
+          ),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.brown),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Row(children: [Text('data')]),
+          ),
+          Column(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.brown.withOpacity(0.2),
+                  border: Border.all(
+                    width: 2,
+                    color: const Color.fromARGB(255, 178, 155, 146),
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      iconSize: 55,
+                      onPressed: () {
+                        if (bpm > 40) {
+                          bpm = bpm - 1;
+                        } else {
+                          bpm = 40;
+                        }
+                        if (isPlaying) {
+                          timer.cancel();
+                          timer = makePeriodicTimer(
+                              Duration(
+                                  milliseconds: (60000 / bpm.round()).round()),
+                              onTickMetronome,
+                              fireNow: false);
+                        }
+                        setState(() {});
+                      },
+                      icon: const Icon(Icons.remove),
+                    ),
+                    Text(
+                      bpm.toString().split('.')[0],
+                      style: const TextStyle(fontSize: 45, color: Colors.brown),
+                    ),
+                    IconButton(
+                      iconSize: 55,
+                      onPressed: () {
+                        if (bpm < 265) {
+                          bpm = bpm + 1;
+                        } else {
+                          bpm = 265;
+                        }
+                        if (isPlaying) {
+                          timer.cancel();
+                          timer = makePeriodicTimer(
+                              Duration(
+                                  milliseconds: (60000 / bpm.round()).round()),
+                              onTickMetronome,
+                              fireNow: false);
+                        }
+                        setState(() {});
+                      },
+                      icon: const Icon(Icons.add),
+                    ),
+                  ],
+                ),
               ),
-          ],
-        ),
-        IconButton(
-          iconSize: 80,
-          onPressed: isPlaying ? onStopPressed : onStartPressed,
-          icon: isPlaying
-              ? const Icon(Icons.stop_circle_outlined)
-              : const Icon(Icons.play_circle_outlined),
-        ),
-        Text('$presentNote'),
-      ],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    iconSize: 80,
+                    onPressed: isPlaying ? onStopPressed : onStartPressed,
+                    icon: isPlaying
+                        ? const Icon(Icons.stop_circle_outlined)
+                        : const Icon(Icons.play_circle_outlined),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

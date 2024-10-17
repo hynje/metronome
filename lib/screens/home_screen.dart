@@ -9,9 +9,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  double defaultBpm = 265;
-  int defaultBeat = 4, defaultNote = 4;
-
   @override
   void initState() {
     super.initState();
@@ -28,18 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
         ),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Metronome(
-              bpm: defaultBpm,
-              beat: defaultBeat,
-              note: defaultNote,
-            ),
-          ],
-        ),
-      ),
+      body: Metronome(),
     );
   }
 }

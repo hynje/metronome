@@ -25,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
         ),
       ),
-      body: Metronome(),
+      body: const Metronome(),
     );
   }
 }

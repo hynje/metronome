@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:metronome/widgets/set_list.dart';
 
 class Metronome extends StatefulWidget {
   const Metronome({super.key});
@@ -76,12 +77,17 @@ class _MetronomeState extends State<Metronome> {
                 ),
             ],
           ),
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.brown),
-              borderRadius: BorderRadius.circular(8),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 22),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.brown),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Setlist(),
+              ),
             ),
-            child: const Row(children: [Text('data')]),
           ),
           Column(
             children: [
@@ -97,9 +103,8 @@ class _MetronomeState extends State<Metronome> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    IconButton(
-                      iconSize: 55,
-                      onPressed: () {
+                    GestureDetector(
+                      onTap: () {
                         if (bpm > 40) {
                           bpm = bpm - 1;
                         } else {
@@ -115,16 +120,47 @@ class _MetronomeState extends State<Metronome> {
                         }
                         setState(() {});
                       },
-                      icon: const Icon(Icons.remove),
+                      child: const Icon(
+                        Icons.remove,
+                        size: 55,
+                      ),
                     ),
-                    Text(
-                      bpm.toString().split('.')[0],
-                      style: const TextStyle(fontSize: 45, color: Colors.brown),
+                    GestureDetector(
+                      onHorizontalDragUpdate: (details) {
+                        if (details.delta.dx > 0) {
+                          if (bpm < 265) {
+                            bpm = bpm + 1;
+                          } else {
+                            bpm = 265;
+                          }
+                          setState(() {});
+                        } else {
+                          if (bpm > 40) {
+                            bpm = bpm - 1;
+                          } else {
+                            bpm = 40;
+                          }
+                          setState(() {});
+                        }
+                        if (isPlaying) {
+                          timer.cancel();
+                          timer = makePeriodicTimer(
+                              Duration(
+                                  milliseconds: (60000 / bpm.round()).round()),
+                              onTickMetronome,
+                              fireNow: false);
+                        }
+                        setState(() {});
+                      },
+                      child: Text(
+                        bpm.toString().split('.')[0],
+                        style:
+                            const TextStyle(fontSize: 45, color: Colors.brown),
+                      ),
                     ),
-                    IconButton(
-                      iconSize: 55,
-                      onPressed: () {
-                        if (bpm < 265) {
+                    GestureDetector(
+                      onTap: () {
+                        if (bpm > 40) {
                           bpm = bpm + 1;
                         } else {
                           bpm = 265;
@@ -139,7 +175,10 @@ class _MetronomeState extends State<Metronome> {
                         }
                         setState(() {});
                       },
-                      icon: const Icon(Icons.add),
+                      child: const Icon(
+                        Icons.add,
+                        size: 55,
+                      ),
                     ),
                   ],
                 ),

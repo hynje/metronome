@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:metronome/widgets/metronome.dart';
+import 'package:metronome/widgets/set_list.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,14 +19,19 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        //backgroundColor: Colors.amber.shade100,
-        //foregroundColor: Colors.brown.shade600,
         title: const Text(
           'Metronome',
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
         ),
       ),
-      body: const Metronome(),
+      body: const Stack(
+        children: [
+          Metronome(),
+          Center(
+            child: SetList(),
+          ),
+        ],
+      ),
     );
   }
 }

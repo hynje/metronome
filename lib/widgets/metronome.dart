@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:metronome/widgets/set_list.dart';
+import 'package:metronome/provider.dart';
+import 'package:provider/provider.dart';
 
 class Metronome extends StatefulWidget {
   const Metronome({super.key});
@@ -16,6 +17,10 @@ class _MetronomeState extends State<Metronome> {
   int presentNote = 0;
   double bpm = 120;
   int beat = 4, note = 4;
+  @override
+  void initState() {
+    super.initState();
+  }
 
   Timer makePeriodicTimer(
     Duration duration,
@@ -54,151 +59,168 @@ class _MetronomeState extends State<Metronome> {
   void onStopPressed() {
     timer.cancel();
     isPlaying = false;
-    presentNote = 0;
-    setState(() {});
+    setState(() {
+      presentNote = 0;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Consumer<AppState>(
+      builder: (context, appState, child) {
+        bpm = appState.getBpm();
+        if (isPlaying) {
+          timer.cancel();
+          timer = makePeriodicTimer(
+              Duration(milliseconds: (60000 / bpm.round()).round()),
+              onTickMetronome,
+              fireNow: false);
+        }
+        return Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              for (int i = 1; i <= beat; ++i)
-                IconButton(
-                  onPressed: () {},
-                  icon: (presentNote == i)
-                      ? const Icon(Icons.circle_outlined)
-                      : const Icon(Icons.circle),
-                ),
-            ],
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 22),
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.brown),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Setlist(),
-              ),
-            ),
-          ),
-          Column(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.brown.withOpacity(0.2),
-                  border: Border.all(
-                    width: 2,
-                    color: const Color.fromARGB(255, 178, 155, 146),
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 15),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    GestureDetector(
-                      onTap: () {
-                        if (bpm > 40) {
-                          bpm = bpm - 1;
-                        } else {
-                          bpm = 40;
-                        }
-                        if (isPlaying) {
-                          timer.cancel();
-                          timer = makePeriodicTimer(
-                              Duration(
-                                  milliseconds: (60000 / bpm.round()).round()),
-                              onTickMetronome,
-                              fireNow: false);
-                        }
-                        setState(() {});
-                      },
-                      child: const Icon(
-                        Icons.remove,
-                        size: 55,
+                    for (int i = 1; i <= beat; ++i)
+                      IconButton(
+                        onPressed: () {},
+                        icon: (presentNote == i)
+                            ? const Icon(Icons.circle_outlined)
+                            : const Icon(Icons.circle),
                       ),
-                    ),
-                    GestureDetector(
-                      onHorizontalDragUpdate: (details) {
-                        if (details.delta.dx > 0) {
-                          if (bpm < 265) {
-                            bpm = bpm + 1;
-                          } else {
-                            bpm = 265;
-                          }
-                          setState(() {});
-                        } else {
-                          if (bpm > 40) {
-                            bpm = bpm - 1;
-                          } else {
-                            bpm = 40;
-                          }
-                          setState(() {});
-                        }
-                        if (isPlaying) {
-                          timer.cancel();
-                          timer = makePeriodicTimer(
-                              Duration(
-                                  milliseconds: (60000 / bpm.round()).round()),
-                              onTickMetronome,
-                              fireNow: false);
-                        }
-                        setState(() {});
-                      },
-                      child: Text(
-                        bpm.toString().split('.')[0],
-                        style:
-                            const TextStyle(fontSize: 45, color: Colors.brown),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        if (bpm > 40) {
-                          bpm = bpm + 1;
-                        } else {
-                          bpm = 265;
-                        }
-                        if (isPlaying) {
-                          timer.cancel();
-                          timer = makePeriodicTimer(
-                              Duration(
-                                  milliseconds: (60000 / bpm.round()).round()),
-                              onTickMetronome,
-                              fireNow: false);
-                        }
-                        setState(() {});
-                      },
-                      child: const Icon(
-                        Icons.add,
-                        size: 55,
-                      ),
-                    ),
                   ],
                 ),
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              Column(
                 children: [
-                  IconButton(
-                    iconSize: 80,
-                    onPressed: isPlaying ? onStopPressed : onStartPressed,
-                    icon: isPlaying
-                        ? const Icon(Icons.stop_circle_outlined)
-                        : const Icon(Icons.play_circle_outlined),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.brown.withOpacity(0.2),
+                      border: Border.all(
+                        width: 2,
+                        color: const Color.fromARGB(255, 178, 155, 146),
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            if (bpm > 40) {
+                              bpm = bpm - 1;
+                            } else {
+                              bpm = 40;
+                            }
+                            if (isPlaying) {
+                              timer.cancel();
+                              timer = makePeriodicTimer(
+                                  Duration(
+                                      milliseconds:
+                                          (60000 / bpm.round()).round()),
+                                  onTickMetronome,
+                                  fireNow: false);
+                            }
+                            setState(() {
+                              appState.setBpm(bpm);
+                            });
+                          },
+                          child: const Icon(
+                            Icons.remove,
+                            size: 55,
+                          ),
+                        ),
+                        GestureDetector(
+                          onHorizontalDragUpdate: (details) {
+                            if (details.delta.dx > 0) {
+                              if (bpm < 265) {
+                                bpm = bpm + 1;
+                              } else {
+                                bpm = 265;
+                              }
+                              setState(() {
+                                appState.setBpm(bpm);
+                              });
+                            } else {
+                              if (bpm > 40) {
+                                bpm = bpm - 1;
+                              } else {
+                                bpm = 40;
+                              }
+                              setState(() {
+                                appState.setBpm(bpm);
+                              });
+                            }
+                            if (isPlaying) {
+                              timer.cancel();
+                              timer = makePeriodicTimer(
+                                  Duration(
+                                      milliseconds:
+                                          (60000 / bpm.round()).round()),
+                                  onTickMetronome,
+                                  fireNow: false);
+                            }
+                            setState(() {
+                              appState.setBpm(bpm);
+                            });
+                          },
+                          child: Text(
+                            bpm.toString().split('.')[0],
+                            style: const TextStyle(
+                                fontSize: 45, color: Colors.brown),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            if (bpm > 40) {
+                              bpm = bpm + 1;
+                            } else {
+                              bpm = 265;
+                            }
+                            if (isPlaying) {
+                              timer.cancel();
+                              timer = makePeriodicTimer(
+                                  Duration(
+                                      milliseconds:
+                                          (60000 / bpm.round()).round()),
+                                  onTickMetronome,
+                                  fireNow: false);
+                            }
+                            setState(() {
+                              appState.setBpm(bpm);
+                            });
+                          },
+                          child: const Icon(
+                            Icons.add,
+                            size: 55,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        iconSize: 80,
+                        onPressed: isPlaying ? onStopPressed : onStartPressed,
+                        icon: isPlaying
+                            ? const Icon(Icons.stop_circle_outlined)
+                            : const Icon(Icons.play_circle_outlined),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

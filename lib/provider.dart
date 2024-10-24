@@ -7,7 +7,6 @@ class AppState with ChangeNotifier {
   void setBpm(double newBpm) {
     _bpm = newBpm;
     notifyListeners();
-    print(_bpm);
   }
 
   double getBpm() {

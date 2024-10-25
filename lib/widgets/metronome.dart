@@ -17,10 +17,6 @@ class _MetronomeState extends State<Metronome> {
   int presentNote = 0;
   double bpm = 120;
   int beat = 4, note = 4;
-  @override
-  void initState() {
-    super.initState();
-  }
 
   Timer makePeriodicTimer(
     Duration duration,
@@ -62,6 +58,11 @@ class _MetronomeState extends State<Metronome> {
     setState(() {
       presentNote = 0;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override

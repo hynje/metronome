@@ -134,8 +134,8 @@ class _SetListState extends State<SetList> {
   @override
   void initState() {
     super.initState();
-    //initPrefs();
-    //initPrefsBpm();
+    initPrefs();
+    initPrefsBpm();
     initPrefsBeat();
   }
 
@@ -179,63 +179,71 @@ class _SetListState extends State<SetList> {
                         }
                       },
                     ),
-                    subtitle: FutureBuilder(
-                      future: initPrefsBpm(),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.music_note,
-                                    size: 15,
-                                  ),
-                                  Text(
+                    subtitle: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.music_note,
+                              size: 15,
+                            ),
+                            FutureBuilder(
+                              future: initPrefsBpm(),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) {
+                                  return Text(
                                     ' : ${bpmList?[index].toString().split('.')[0]}',
-                                  ),
-                                  Text(
+                                  );
+                                } else {
+                                  return const Text('');
+                                }
+                              },
+                            ),
+                            FutureBuilder(
+                              future: initPrefsBeat(),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) {
+                                  return Text(
                                     ' , Beat : ${beatList?[index].toString()}',
-                                  ),
-                                ],
-                              ),
-                              Transform.scale(
-                                scale: 1.2,
-                                child: Transform.translate(
-                                  offset: const Offset(0, -10),
-                                  child: GestureDetector(
-                                    onTapDown: (details) {
-                                      savePrefsBpm(appState.getBpm(), index);
-                                      savePrefsBeat(appState.getBeat(), index);
-                                      setState(() {});
-                                    },
-                                    child: (isSelected == index) &&
-                                            ((double.parse(bpmList![index])) !=
-                                                    appState.getBpm() ||
-                                                (int.parse(beatList![index]) !=
-                                                    appState.getBeat()))
-                                        ? Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              border: Border.all(
-                                                  width: 0.7,
-                                                  color: const Color.fromARGB(
-                                                      255, 252, 160, 0)),
-                                            ),
-                                            child: const Text('save'),
-                                          )
-                                        : const Text(''),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        } else {
-                          return const Row();
-                        }
-                      },
+                                  );
+                                } else {
+                                  return const Text('');
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                        Transform.scale(
+                          scale: 1.2,
+                          child: Transform.translate(
+                            offset: const Offset(0, -10),
+                            child: GestureDetector(
+                              onTapDown: (details) {
+                                savePrefsBpm(appState.getBpm(), index);
+                                savePrefsBeat(appState.getBeat(), index);
+                                setState(() {});
+                              },
+                              child: (isSelected == index) &&
+                                      ((double.parse(bpmList![index])) !=
+                                              appState.getBpm() ||
+                                          (int.parse(beatList![index]) !=
+                                              appState.getBeat()))
+                                  ? Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                            width: 0.7,
+                                            color: const Color.fromARGB(
+                                                255, 252, 160, 0)),
+                                      ),
+                                      child: const Text('save'),
+                                    )
+                                  : const Text(''),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     trailing: (isSelected == index)
                         ? const Icon(Icons.music_note)

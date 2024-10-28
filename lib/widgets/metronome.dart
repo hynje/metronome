@@ -16,7 +16,7 @@ class _MetronomeState extends State<Metronome> {
   bool isPlaying = false;
   int presentNote = 0;
   double bpm = 120;
-  int beat = 4, note = 4;
+  int beat = 4;
 
   Timer makePeriodicTimer(
     Duration duration,
@@ -60,6 +60,21 @@ class _MetronomeState extends State<Metronome> {
     });
   }
 
+  PopupMenuItem<String> menuItem(String text) {
+    return PopupMenuItem<String>(
+      enabled: true,
+      onTap: () {},
+      value: text,
+      height: 70,
+      child: Center(
+        child: Text(
+          text,
+          style: const TextStyle(color: Colors.brown),
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -69,6 +84,7 @@ class _MetronomeState extends State<Metronome> {
   Widget build(BuildContext context) {
     return Consumer<AppState>(
       builder: (context, appState, child) {
+        beat = appState.getBeat();
         bpm = appState.getBpm();
         if (isPlaying) {
           timer.cancel();
@@ -205,15 +221,53 @@ class _MetronomeState extends State<Metronome> {
                     ),
                   ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      IconButton(
-                        iconSize: 80,
-                        onPressed: isPlaying ? onStopPressed : onStartPressed,
-                        icon: isPlaying
-                            ? const Icon(Icons.stop_circle_outlined)
-                            : const Icon(Icons.play_circle_outlined),
+                      Expanded(
+                        flex: 1,
+                        child: PopupMenuButton(
+                          shape: RoundedRectangleBorder(
+                            side:
+                                const BorderSide(width: 1, color: Colors.brown),
+                            borderRadius: BorderRadius.circular(7),
+                          ),
+                          shadowColor: const Color.fromARGB(255, 252, 160, 0),
+                          elevation: 10,
+                          color: const Color.fromARGB(255, 244, 244, 235),
+                          constraints: const BoxConstraints(
+                              minWidth: 50, maxWidth: 150, maxHeight: 200),
+                          itemBuilder: (context) {
+                            appState.setBeat(beat);
+                            return [
+                              menuItem('2'),
+                              menuItem('3'),
+                              menuItem('4'),
+                              menuItem('5'),
+                              menuItem('6'),
+                              menuItem('7'),
+                            ];
+                          },
+                          onSelected: (value) {
+                            setState(() {
+                              beat = int.parse(value);
+                              appState.setBeat(beat);
+                            });
+                          },
+                        ),
                       ),
+                      Expanded(
+                        flex: 2,
+                        child: IconButton(
+                          iconSize: 80,
+                          onPressed: isPlaying ? onStopPressed : onStartPressed,
+                          icon: isPlaying
+                              ? const Icon(Icons.stop_circle_outlined)
+                              : const Icon(Icons.play_circle_outlined),
+                        ),
+                      ),
+                      const Expanded(
+                        flex: 1,
+                        child: Text(''),
+                      )
                     ],
                   ),
                 ],

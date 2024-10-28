@@ -12,12 +12,12 @@ class SetList extends StatefulWidget {
 }
 
 class _SetListState extends State<SetList> {
-  //final bpmsList = List<double>.filled(10, 60);
   int isSelected = -1;
   final int _itemcount = 10;
   late SharedPreferences prefs;
   late List<String>? songList = [];
   late List<String>? bpmList = [];
+  late List<String>? beatList = [];
 
   Future initPrefs() async {
     prefs = await SharedPreferences.getInstance();
@@ -39,6 +39,16 @@ class _SetListState extends State<SetList> {
     return prefs;
   }
 
+  Future initPrefsBeat() async {
+    prefs = await SharedPreferences.getInstance();
+    beatList = prefs.getStringList('beatList');
+    if (beatList == null) {
+      await prefs.setStringList(
+          'beatList', List<String>.filled(_itemcount, '4'));
+    }
+    return prefs;
+  }
+
   Future savePrefs(String newName, int index) async {
     prefs = await SharedPreferences.getInstance();
     songList = prefs.getStringList('songList');
@@ -51,6 +61,13 @@ class _SetListState extends State<SetList> {
     bpmList = prefs.getStringList('bpmList');
     bpmList?[index] = newBpm.toString();
     prefs.setStringList('bpmList', bpmList!);
+  }
+
+  Future savePrefsBeat(int newBeat, int index) async {
+    prefs = await SharedPreferences.getInstance();
+    beatList = prefs.getStringList('beatList');
+    beatList?[index] = newBeat.toString();
+    prefs.setStringList('beatList', beatList!);
   }
 
   Future<dynamic> editSongName(BuildContext context, int index) async {
@@ -119,6 +136,7 @@ class _SetListState extends State<SetList> {
     super.initState();
     //initPrefs();
     //initPrefsBpm();
+    initPrefsBeat();
   }
 
   @override
@@ -177,6 +195,9 @@ class _SetListState extends State<SetList> {
                                   Text(
                                     ' : ${bpmList?[index].toString().split('.')[0]}',
                                   ),
+                                  Text(
+                                    ' , Beat : ${beatList?[index].toString()}',
+                                  ),
                                 ],
                               ),
                               Transform.scale(
@@ -186,12 +207,25 @@ class _SetListState extends State<SetList> {
                                   child: GestureDetector(
                                     onTapDown: (details) {
                                       savePrefsBpm(appState.getBpm(), index);
+                                      savePrefsBeat(appState.getBeat(), index);
                                       setState(() {});
                                     },
                                     child: (isSelected == index) &&
-                                            (double.parse(bpmList![index]) !=
-                                                appState.getBpm())
-                                        ? const Text('save')
+                                            ((double.parse(bpmList![index])) !=
+                                                    appState.getBpm() ||
+                                                (int.parse(beatList![index]) !=
+                                                    appState.getBeat()))
+                                        ? Container(
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              border: Border.all(
+                                                  width: 0.7,
+                                                  color: const Color.fromARGB(
+                                                      255, 252, 160, 0)),
+                                            ),
+                                            child: const Text('save'),
+                                          )
                                         : const Text(''),
                                   ),
                                 ),
@@ -209,6 +243,7 @@ class _SetListState extends State<SetList> {
                     onTap: () {
                       isSelected = index;
                       appState.setBpm(double.parse(bpmList![index]));
+                      appState.setBeat(int.parse(beatList![index]));
                     },
                   ),
                 );

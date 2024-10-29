@@ -70,9 +70,14 @@ class _SetListState extends State<SetList> {
     prefs.setStringList('beatList', beatList!);
   }
 
-  Future<dynamic> editSongName(BuildContext context, int index) async {
+  Future<dynamic> editSongName(
+      BuildContext context, int index, AppState appState) async {
     TextEditingController controller =
         TextEditingController(text: songList![index]);
+    TextEditingController controller2 =
+        TextEditingController(text: bpmList![index].split('.')[0]);
+    TextEditingController controller3 =
+        TextEditingController(text: beatList![index]);
     return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -92,7 +97,37 @@ class _SetListState extends State<SetList> {
                           BorderSide(color: Color.fromARGB(255, 252, 160, 0)),
                     ),
                     labelStyle: TextStyle(color: Colors.brown),
-                    labelText: 'Input new title',
+                    labelText: 'title',
+                  ),
+                ),
+                TextField(
+                  controller: controller2,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.brown),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide:
+                          BorderSide(color: Color.fromARGB(255, 252, 160, 0)),
+                    ),
+                    labelStyle: TextStyle(color: Colors.brown),
+                    labelText: 'bpm : 40 - 265',
+                  ),
+                ),
+                TextField(
+                  controller: controller3,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.brown),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide:
+                          BorderSide(color: Color.fromARGB(255, 252, 160, 0)),
+                    ),
+                    labelStyle: TextStyle(color: Colors.brown),
+                    labelText: 'beat : 2 - 7',
                   ),
                 ),
               ],
@@ -112,8 +147,24 @@ class _SetListState extends State<SetList> {
             ),
             ElevatedButton(
               onPressed: () {
+                double newBpm = double.parse(controller2.text);
+                if (newBpm < 40) {
+                  newBpm = 40;
+                } else if (newBpm > 265) {
+                  newBpm = 265;
+                }
+                int newBeat = int.parse(controller3.text);
+                if (newBeat < 2) {
+                  newBpm = 2;
+                } else if (newBeat > 7) {
+                  newBeat = 7;
+                }
                 setState(() {
                   savePrefs(controller.text, index);
+                  savePrefsBpm(newBpm, index);
+                  appState.setBpm(newBpm);
+                  savePrefsBeat(newBeat, index);
+                  appState.setBeat(newBeat);
                 });
                 Navigator.pop(context);
               },
@@ -156,7 +207,7 @@ class _SetListState extends State<SetList> {
               itemBuilder: (context, index) {
                 return GestureDetector(
                   onLongPress: () {
-                    editSongName(context, index);
+                    editSongName(context, index, appState);
                   },
                   child: ListTile(
                     textColor: (isSelected == index)
@@ -214,40 +265,30 @@ class _SetListState extends State<SetList> {
                             ),
                           ],
                         ),
-                        Transform.scale(
-                          scale: 1.2,
-                          child: Transform.translate(
-                            offset: const Offset(0, -10),
-                            child: GestureDetector(
-                              onTapDown: (details) {
-                                savePrefsBpm(appState.getBpm(), index);
-                                savePrefsBeat(appState.getBeat(), index);
-                                setState(() {});
-                              },
-                              child: (isSelected == index) &&
-                                      ((double.parse(bpmList![index])) !=
-                                              appState.getBpm() ||
-                                          (int.parse(beatList![index]) !=
-                                              appState.getBeat()))
-                                  ? Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                            width: 0.7,
-                                            color: const Color.fromARGB(
-                                                255, 252, 160, 0)),
-                                      ),
-                                      child: const Text('save'),
-                                    )
-                                  : const Text(''),
-                            ),
-                          ),
-                        ),
                       ],
                     ),
-                    trailing: (isSelected == index)
-                        ? const Icon(Icons.music_note)
-                        : null,
+                    trailing: (isSelected == index) &&
+                            ((double.parse(bpmList![index])) !=
+                                    appState.getBpm() ||
+                                (int.parse(beatList![index]) !=
+                                    appState.getBeat()))
+                        ? ElevatedButton(
+                            onPressed: () {
+                              savePrefsBpm(appState.getBpm(), index);
+                              savePrefsBeat(appState.getBeat(), index);
+                              setState(() {});
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  const Color.fromARGB(255, 244, 244, 235),
+                              foregroundColor:
+                                  const Color.fromARGB(255, 252, 160, 0),
+                              shadowColor: Colors.black,
+                              elevation: 1.0,
+                            ),
+                            child: const Text('save'),
+                          )
+                        : const Text(''),
                     onTap: () {
                       isSelected = index;
                       appState.setBpm(double.parse(bpmList![index]));

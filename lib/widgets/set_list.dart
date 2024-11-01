@@ -70,7 +70,7 @@ class _SetListState extends State<SetList> {
     prefs.setStringList('beatList', beatList!);
   }
 
-  Future<dynamic> editSongName(
+  Future<dynamic> editSongForm(
       BuildContext context, int index, AppState appState) async {
     TextEditingController controller =
         TextEditingController(text: songList![index]);
@@ -207,7 +207,10 @@ class _SetListState extends State<SetList> {
               itemBuilder: (context, index) {
                 return GestureDetector(
                   onLongPress: () {
-                    editSongName(context, index, appState);
+                    isSelected = index;
+                    appState.setBpm(double.parse(bpmList![index]));
+                    appState.setBeat(int.parse(beatList![index]));
+                    editSongForm(context, index, appState);
                   },
                   child: ListTile(
                     textColor: (isSelected == index)

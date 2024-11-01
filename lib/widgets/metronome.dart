@@ -225,6 +225,7 @@ class _MetronomeState extends State<Metronome> {
                       Expanded(
                         flex: 1,
                         child: PopupMenuButton(
+                          offset: const Offset(0, -30),
                           shape: RoundedRectangleBorder(
                             side:
                                 const BorderSide(width: 1, color: Colors.brown),

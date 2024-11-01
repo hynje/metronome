@@ -60,6 +60,44 @@ class _MetronomeState extends State<Metronome> {
     });
   }
 
+  String checkTempo(double presentBpm) {
+    if (40 <= presentBpm && presentBpm <= 44) {
+      return 'Lento';
+    } else if (44 < presentBpm && presentBpm <= 49) {
+      return 'Largo';
+    } else if (49 < presentBpm && presentBpm <= 54) {
+      return 'Larghetto';
+    } else if (54 < presentBpm && presentBpm <= 64) {
+      return 'Adagio';
+    } else if (64 < presentBpm && presentBpm <= 68) {
+      return 'Adagietto';
+    } else if (68 < presentBpm && presentBpm <= 72) {
+      return 'Andante moderato';
+    } else if (72 < presentBpm && presentBpm <= 77) {
+      return 'Andante';
+    } else if (77 < presentBpm && presentBpm <= 82) {
+      return 'Andantino';
+    } else if (82 < presentBpm && presentBpm <= 85) {
+      return 'Marcia moderato';
+    } else if (85 < presentBpm && presentBpm <= 97) {
+      return 'Moderato';
+    } else if (97 < presentBpm && presentBpm <= 109) {
+      return 'Allegretto';
+    } else if (109 < presentBpm && presentBpm <= 131) {
+      return 'Allegro';
+    } else if (131 < presentBpm && presentBpm <= 139) {
+      return 'Vivace';
+    } else if (139 < presentBpm && presentBpm <= 149) {
+      return 'Vivacissimo';
+    } else if (149 < presentBpm && presentBpm <= 167) {
+      return 'Allegrissimo';
+    } else if (167 < presentBpm && presentBpm <= 177) {
+      return 'Presto';
+    } else {
+      return 'Prestissimo';
+    }
+  }
+
   PopupMenuItem<String> menuItem(String text) {
     return PopupMenuItem<String>(
       enabled: true,
@@ -125,96 +163,105 @@ class _MetronomeState extends State<Metronome> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        GestureDetector(
-                          onTap: () {
-                            if (bpm > 40) {
-                              bpm = bpm - 1;
-                            } else {
-                              bpm = 40;
-                            }
-                            if (isPlaying) {
-                              timer.cancel();
-                              timer = makePeriodicTimer(
-                                  Duration(
-                                      milliseconds:
-                                          (60000 / bpm.round()).round()),
-                                  onTickMetronome,
-                                  fireNow: false);
-                            }
-                            setState(() {
-                              appState.setBpm(bpm);
-                            });
-                          },
-                          child: const Icon(
-                            Icons.remove,
-                            size: 55,
-                          ),
-                        ),
-                        GestureDetector(
-                          onHorizontalDragUpdate: (details) {
-                            if (details.delta.dx > 0) {
-                              if (bpm < 265) {
-                                bpm = bpm + 1;
-                              } else {
-                                bpm = 265;
-                              }
-                              setState(() {
-                                appState.setBpm(bpm);
-                              });
-                            } else {
+                        Expanded(
+                          flex: 1,
+                          child: GestureDetector(
+                            onTap: () {
                               if (bpm > 40) {
                                 bpm = bpm - 1;
                               } else {
                                 bpm = 40;
                               }
+                              if (isPlaying) {
+                                timer.cancel();
+                                timer = makePeriodicTimer(
+                                    Duration(
+                                        milliseconds:
+                                            (60000 / bpm.round()).round()),
+                                    onTickMetronome,
+                                    fireNow: false);
+                              }
                               setState(() {
                                 appState.setBpm(bpm);
                               });
-                            }
-                            if (isPlaying) {
-                              timer.cancel();
-                              timer = makePeriodicTimer(
-                                  Duration(
-                                      milliseconds:
-                                          (60000 / bpm.round()).round()),
-                                  onTickMetronome,
-                                  fireNow: false);
-                            }
-                            setState(() {
-                              appState.setBpm(bpm);
-                            });
-                          },
-                          child: Text(
-                            bpm.toString().split('.')[0],
-                            style: const TextStyle(
-                                fontSize: 45, color: Colors.brown),
+                            },
+                            child: const Icon(
+                              Icons.remove,
+                              size: 55,
+                            ),
                           ),
                         ),
-                        GestureDetector(
-                          onTap: () {
-                            if (bpm > 40) {
-                              bpm = bpm + 1;
-                            } else {
-                              bpm = 265;
-                            }
-                            if (isPlaying) {
-                              timer.cancel();
-                              timer = makePeriodicTimer(
-                                  Duration(
-                                      milliseconds:
-                                          (60000 / bpm.round()).round()),
-                                  onTickMetronome,
-                                  fireNow: false);
-                            }
-                            setState(() {
-                              appState.setBpm(bpm);
-                            });
-                          },
-                          child: const Icon(
-                            Icons.add,
-                            size: 55,
+                        Expanded(
+                          flex: 1,
+                          child: GestureDetector(
+                            onHorizontalDragUpdate: (details) {
+                              if (details.delta.dx > 0) {
+                                if (bpm < 265) {
+                                  bpm = bpm + 1;
+                                } else {
+                                  bpm = 265;
+                                }
+                                setState(() {
+                                  appState.setBpm(bpm);
+                                });
+                              } else {
+                                if (bpm > 40) {
+                                  bpm = bpm - 1;
+                                } else {
+                                  bpm = 40;
+                                }
+                                setState(() {
+                                  appState.setBpm(bpm);
+                                });
+                              }
+                              if (isPlaying) {
+                                timer.cancel();
+                                timer = makePeriodicTimer(
+                                    Duration(
+                                        milliseconds:
+                                            (60000 / bpm.round()).round()),
+                                    onTickMetronome,
+                                    fireNow: false);
+                              }
+                              setState(() {
+                                appState.setBpm(bpm);
+                              });
+                            },
+                            child: Text(
+                              textAlign: TextAlign.center,
+                              bpm.toString().split('.')[0],
+                              style: const TextStyle(
+                                  fontSize: 45, color: Colors.brown),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: GestureDetector(
+                            onTap: () {
+                              if (bpm > 40) {
+                                bpm = bpm + 1;
+                              } else {
+                                bpm = 265;
+                              }
+                              if (isPlaying) {
+                                timer.cancel();
+                                timer = makePeriodicTimer(
+                                    Duration(
+                                        milliseconds:
+                                            (60000 / bpm.round()).round()),
+                                    onTickMetronome,
+                                    fireNow: false);
+                              }
+                              setState(() {
+                                appState.setBpm(bpm);
+                              });
+                            },
+                            child: const Icon(
+                              Icons.add,
+                              size: 55,
+                            ),
                           ),
                         ),
                       ],
@@ -265,10 +312,16 @@ class _MetronomeState extends State<Metronome> {
                               : const Icon(Icons.play_circle_outlined),
                         ),
                       ),
-                      const Expanded(
+                      Expanded(
                         flex: 1,
-                        child: Text(''),
-                      )
+                        child: Text(
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              fontStyle: FontStyle.italic,
+                              color: Color.fromARGB(255, 252, 160, 0)),
+                          checkTempo(appState.getBpm()),
+                        ),
+                      ),
                     ],
                   ),
                 ],

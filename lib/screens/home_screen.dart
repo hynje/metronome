@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:metronome/widgets/banner_ad.dart';
 import 'package:metronome/widgets/metronome.dart';
 import 'package:metronome/widgets/set_list.dart';
+import 'package:metronome/ad_manager.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,10 +27,13 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
         ),
       ),
-      body: const Stack(
+      body: Stack(
         children: [
-          Metronome(),
-          Center(
+          FullWidthBannerAd(
+            bannerAd: AdManager.instance.appBarAd,
+          ),
+          const Metronome(),
+          const Center(
             child: SetList(),
           ),
         ],

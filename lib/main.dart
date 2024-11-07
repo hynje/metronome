@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:metronome/ad_manager.dart';
 import 'package:metronome/provider.dart';
 import 'package:metronome/screens/home_screen.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +11,7 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+  AdManager.init();
   runApp(const MyApp());
 }
 

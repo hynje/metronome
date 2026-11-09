@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:metronome/provider.dart';
-import 'package:metronome/screens/home_screen.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+
+import 'screens/home_screen.dart';
+import 'services/click_player.dart';
+import 'services/song_repository.dart';
+import 'state/metronome_controller.dart';
+import 'state/setlist_controller.dart';
+import 'theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -10,34 +15,31 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  MyApp({super.key, ClickPlayer? clickPlayer, SongRepository? songRepository})
+      : clickPlayer = clickPlayer ?? AudioPoolClickPlayer(),
+        songRepository = songRepository ?? SongRepository();
 
-  // This widget is the root of your application.
+  final ClickPlayer clickPlayer;
+  final SongRepository songRepository;
+
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => AppState(),
-      child: MaterialApp(
-        theme: ThemeData(
-          scaffoldBackgroundColor: const Color.fromARGB(255, 244, 244, 235),
-          primaryColor: const Color.fromARGB(255, 252, 160, 0),
-          appBarTheme: const AppBarTheme(
-            foregroundColor: Colors.brown,
-            backgroundColor: Color.fromARGB(255, 252, 160, 0),
-          ),
-          textTheme: const TextTheme(
-            headlineLarge: TextStyle(
-              color: Color.fromARGB(255, 252, 160, 0),
-            ),
-          ),
-          iconTheme: const IconThemeData(
-            color: Color.fromARGB(255, 252, 160, 0),
-          ),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => MetronomeController(clickPlayer: clickPlayer),
         ),
+        ChangeNotifierProvider(
+          create: (_) =>
+              SetListController(repository: songRepository)..load(),
+        ),
+      ],
+      child: MaterialApp(
+        theme: buildAppTheme(),
         home: const HomeScreen(),
       ),
     );

@@ -15,7 +15,7 @@ class BpmControl extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.text.withOpacity(0.2),
+        color: AppColors.text.withValues(alpha: 0.2),
         border: Border.all(width: 2, color: AppColors.panelBorder),
         borderRadius: BorderRadius.circular(8),
       ),

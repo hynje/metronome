@@ -15,27 +15,32 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key, ClickPlayer? clickPlayer, SongRepository? songRepository})
-      : clickPlayer = clickPlayer ?? AudioPoolClickPlayer(),
-        songRepository = songRepository ?? SongRepository();
+  const MyApp({super.key, this.createClickPlayer, this.songRepository});
 
-  final ClickPlayer clickPlayer;
-  final SongRepository songRepository;
+  /// 테스트에서 가짜 플레이어를 넣을 때 사용한다. 기본값은 [AudioPoolClickPlayer].
+  ///
+  /// 인스턴스가 아니라 생성 함수를 받아서, 위젯이 다시 만들어져도(핫 리로드 등)
+  /// 플레이어는 Provider가 처음 만들 때 한 번만 생긴다.
+  final ClickPlayer Function()? createClickPlayer;
+  final SongRepository? songRepository;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => MetronomeController(clickPlayer: clickPlayer),
+          create: (_) => MetronomeController(
+            clickPlayer: createClickPlayer?.call() ?? AudioPoolClickPlayer(),
+          ),
         ),
         ChangeNotifierProvider(
           create: (_) =>
-              SetListController(repository: songRepository)..load(),
+              SetListController(repository: songRepository ?? SongRepository())
+                ..load(),
         ),
       ],
       child: MaterialApp(

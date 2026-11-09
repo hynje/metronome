@@ -1,18 +1,26 @@
 import 'dart:async';
 
+/// 현재 시각(기준점으로부터 지난 시간)을 돌려주는 함수.
+typedef ElapsedClock = Duration Function();
+
 /// 정해진 BPM으로 [onTick]을 호출하는 타이머.
 ///
-/// `Timer.periodic`은 호출마다 오차가 쌓이므로, 시작 시각 기준으로
-/// 다음 박의 목표 시각을 계산해 한 번짜리 타이머를 다시 거는 방식으로
-/// 오차가 누적되지 않게 한다.
+/// 타이머 간격은 밀리초 단위로 잘리기 때문에(예: 121 BPM = 495.87ms),
+/// 같은 간격을 반복하면 박마다 생기는 작은 오차가 계속 쌓인다.
+/// 그래서 매 박마다 "시작 시각 + n × 간격"(마이크로초 단위)을 목표로
+/// 남은 시간을 다시 계산해 한 번짜리 타이머를 건다. 콜백이 늦게 불려도
+/// 다음 박에서 바로잡히므로 오차가 누적되지 않는다.
 class MetronomeEngine {
-  MetronomeEngine({required this.onTick});
+  /// [clock]을 넘기지 않으면 실제 시간을 쓴다. 테스트에서는 가짜 시계를 넣는다.
+  MetronomeEngine({required this.onTick, ElapsedClock? clock})
+      : _now = clock ?? _realClock();
 
   final void Function() onTick;
+  final ElapsedClock _now;
 
-  final Stopwatch _clock = Stopwatch();
   Timer? _timer;
   Duration _interval = Duration.zero;
+  Duration _startedAt = Duration.zero;
   int _ticks = 0;
 
   bool get isRunning => _timer != null;
@@ -37,13 +45,10 @@ class MetronomeEngine {
   void stop() {
     _timer?.cancel();
     _timer = null;
-    _clock.stop();
   }
 
   void _restartClock() {
-    _clock
-      ..reset()
-      ..start();
+    _startedAt = _now();
     _ticks = 0;
   }
 
@@ -54,10 +59,15 @@ class MetronomeEngine {
 
   void _scheduleNext() {
     _ticks++;
-    final wait = _interval * _ticks - _clock.elapsed;
+    final wait = _interval * _ticks - (_now() - _startedAt);
     _timer = Timer(wait.isNegative ? Duration.zero : wait, _tick);
   }
 
   static Duration _intervalFor(int bpm) =>
       Duration(microseconds: (Duration.microsecondsPerMinute / bpm).round());
+
+  static ElapsedClock _realClock() {
+    final stopwatch = Stopwatch()..start();
+    return () => stopwatch.elapsed;
+  }
 }

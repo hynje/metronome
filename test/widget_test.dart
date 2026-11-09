@@ -103,7 +103,7 @@ void main() {
       'bpmList': ['72'],
       'beatList': ['3'],
     });
-    await tester.pumpWidget(MyApp(clickPlayer: FakeClickPlayer()));
+    await tester.pumpWidget(const MyApp(createClickPlayer: FakeClickPlayer.new));
     await tester.pumpAndSettle();
 
     expect(find.text('$kDefaultBpm'), findsOneWidget);

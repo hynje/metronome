@@ -14,6 +14,8 @@ class TransportBar extends StatelessWidget {
     final controller = context.read<MetronomeController>();
     final beat = context.select((MetronomeController c) => c.beat);
     final isPlaying = context.select((MetronomeController c) => c.isPlaying);
+    final audioFailed =
+        context.select((MetronomeController c) => c.audioFailed);
 
     return Row(
       children: [
@@ -61,7 +63,15 @@ class TransportBar extends StatelessWidget {
                 : Icons.play_circle_outlined),
           ),
         ),
-        const Expanded(child: SizedBox.shrink()),
+        Expanded(
+          child: audioFailed
+              ? IconButton(
+                  icon: const Icon(Icons.volume_off),
+                  tooltip: "Couldn't load the click sound. Tap to retry.",
+                  onPressed: controller.retryAudio,
+                )
+              : const SizedBox.shrink(),
+        ),
       ],
     );
   }

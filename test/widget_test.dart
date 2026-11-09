@@ -1,5 +1,9 @@
+import 'dart:async';
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:metronome/main.dart';
@@ -10,10 +14,18 @@ import 'package:metronome/state/metronome_controller.dart';
 import 'package:metronome/state/setlist_controller.dart';
 
 class FakeClickPlayer implements ClickPlayer {
+  FakeClickPlayer({this.onInit});
+
+  /// 소리 준비 동작을 바꾸고 싶을 때 사용 (지연, 실패 등).
+  final Future<void> Function()? onInit;
   int clicks = 0;
+  int initCalls = 0;
 
   @override
-  Future<void> init() async {}
+  Future<void> init() async {
+    initCalls++;
+    await onInit?.call();
+  }
 
   @override
   void click() => clicks++;
@@ -74,16 +86,71 @@ void main() {
       c.dispose();
     });
 
-    test('재생하면 즉시 첫 박이 울리고, 정지하면 박 표시가 초기화된다', () {
+    test('재생하면 즉시 첫 박이 울리고, 정지하면 박 표시가 초기화된다', () async {
       final player = FakeClickPlayer();
       final c = MetronomeController(clickPlayer: player);
-      c.start();
+      await c.start();
       expect(c.isPlaying, isTrue);
       expect(player.clicks, 1);
       expect(c.currentBeat, 1);
       c.stop();
       expect(c.isPlaying, isFalse);
       expect(c.currentBeat, 0);
+      c.dispose();
+    });
+  });
+
+  group('MetronomeController 소리 준비', () {
+    test('준비가 끝나기 전에 재생을 누르면 준비된 뒤에 시작한다', () async {
+      final ready = Completer<void>();
+      final player = FakeClickPlayer(onInit: () => ready.future);
+      final c = MetronomeController(clickPlayer: player);
+
+      final starting = c.start();
+      expect(c.isPlaying, isFalse);
+      expect(player.clicks, 0);
+
+      ready.complete();
+      await starting;
+      expect(c.isPlaying, isTrue);
+      expect(player.clicks, 1);
+      c.dispose();
+    });
+
+    test('준비를 기다리는 중에 정지하면 재생하지 않는다', () async {
+      final ready = Completer<void>();
+      final c = MetronomeController(
+          clickPlayer: FakeClickPlayer(onInit: () => ready.future));
+
+      final starting = c.start();
+      c.togglePlay(); // 기다리는 중에 다시 누르면 취소
+      ready.complete();
+      await starting;
+      expect(c.isPlaying, isFalse);
+      c.dispose();
+    });
+
+    test('불러오기에 실패해도 박은 돌아가고, 다시 시도해 성공하면 표시가 사라진다', () async {
+      final reported = <FlutterErrorDetails>[];
+      final originalOnError = FlutterError.onError;
+      FlutterError.onError = reported.add;
+      addTearDown(() => FlutterError.onError = originalOnError);
+
+      var fail = true;
+      final player = FakeClickPlayer(onInit: () async {
+        if (fail) throw Exception('asset missing');
+      });
+      final c = MetronomeController(clickPlayer: player);
+
+      await c.start();
+      expect(c.audioFailed, isTrue);
+      expect(c.isPlaying, isTrue);
+      expect(reported, hasLength(1));
+
+      fail = false;
+      await c.retryAudio();
+      expect(c.audioFailed, isFalse);
+      expect(player.initCalls, 2);
       c.dispose();
     });
   });
@@ -103,7 +170,8 @@ void main() {
       'bpmList': ['72'],
       'beatList': ['3'],
     });
-    await tester.pumpWidget(const MyApp(createClickPlayer: FakeClickPlayer.new));
+    await tester
+        .pumpWidget(const MyApp(createClickPlayer: FakeClickPlayer.new));
     await tester.pumpAndSettle();
 
     expect(find.text('$kDefaultBpm'), findsOneWidget);
@@ -115,5 +183,45 @@ void main() {
     await tester.pump();
     expect(find.text('73'), findsOneWidget);
     expect(find.text('save'), findsOneWidget);
+  });
+
+  group('BPM 패널', () {
+    Future<void> pumpApp(WidgetTester tester) async {
+      await tester
+          .pumpWidget(const MyApp(createClickPlayer: FakeClickPlayer.new));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('+를 길게 누르면 계속 올라가고, 떼면 멈춘다', (tester) async {
+      await pumpApp(tester);
+      final gesture =
+          await tester.startGesture(tester.getCenter(find.byIcon(Icons.add)));
+      await tester.pump(kLongPressTimeout + const Duration(milliseconds: 10));
+      await tester.pump(const Duration(seconds: 1));
+      await gesture.up();
+      await tester.pump();
+
+      final c = tester.element(find.byType(MaterialApp));
+      final bpm = c.read<MetronomeController>().bpm;
+      // 처음엔 120ms 간격, 8번 뒤부터는 40ms 간격 → 1초 동안 대략 12번
+      expect(bpm, inInclusiveRange(130, 136));
+
+      await tester.pump(const Duration(seconds: 1));
+      expect(c.read<MetronomeController>().bpm, bpm);
+    });
+
+    testWidgets('숫자를 드래그한 거리만큼 BPM이 바뀐다', (tester) async {
+      await pumpApp(tester);
+      await tester.drag(find.text('120'), const Offset(80, 0));
+      await tester.pump();
+      final c = tester.element(find.byType(MaterialApp));
+      // 8px당 1. 터치 판정에 쓰이는 처음 몇 px는 빠질 수 있다.
+      expect(c.read<MetronomeController>().bpm, inInclusiveRange(127, 130));
+
+      await tester.drag(find.text('${c.read<MetronomeController>().bpm}'),
+          const Offset(-400, 0));
+      await tester.pump();
+      expect(c.read<MetronomeController>().bpm, inInclusiveRange(77, 82));
+    });
   });
 }
